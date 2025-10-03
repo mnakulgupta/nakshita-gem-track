@@ -15,6 +15,7 @@ import ProductionManager from "./pages/ProductionManager";
 import JobcardManagement from "./pages/JobcardManagement";
 import WorkshopTracking from "./pages/WorkshopTracking";
 import DesignDepartment from "./pages/DesignDepartment";
+import Analytics from "./pages/Analytics";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -113,6 +114,16 @@ const App = () => (
                 <ProtectedRoute requiredRoles={["admin", "production_manager"]}>
                   <AppLayout>
                     <ProductionManager />
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/analytics"
+              element={
+                <ProtectedRoute requiredRoles={["admin", "production_manager"]}>
+                  <AppLayout>
+                    <Analytics />
                   </AppLayout>
                 </ProtectedRoute>
               }

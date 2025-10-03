@@ -14,8 +14,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Search, Eye, Filter, Package } from "lucide-react";
+import { Search, Eye, Filter, Package, Download } from "lucide-react";
 import { format } from "date-fns";
+import { generateInquiryPDF } from "@/utils/pdfGenerator";
+import { useToast } from "@/hooks/use-toast";
 
 const Inquiries = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -23,6 +25,7 @@ const Inquiries = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [selectedInquiry, setSelectedInquiry] = useState<any>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const { toast } = useToast();
 
   const { data: inquiries, isLoading } = useQuery({
     queryKey: ["all-inquiries"],
@@ -67,6 +70,22 @@ const Inquiries = () => {
   const handleViewDetails = (inquiry: any) => {
     setSelectedInquiry(inquiry);
     setDetailsOpen(true);
+  };
+
+  const handleExportPDF = (inquiry: any) => {
+    try {
+      generateInquiryPDF(inquiry);
+      toast({
+        title: "PDF Generated",
+        description: "Inquiry PDF has been downloaded successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to generate PDF. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (isLoading) {
@@ -191,6 +210,14 @@ const Inquiries = () => {
                         >
                           <Eye className="h-4 w-4 mr-2" />
                           View
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleExportPDF(inquiry)}
+                        >
+                          <Download className="h-4 w-4 mr-2" />
+                          PDF
                         </Button>
                       </div>
                     </div>

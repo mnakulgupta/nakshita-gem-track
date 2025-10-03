@@ -7,14 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ClipboardList, Search, Package, FileText } from "lucide-react";
+import { ClipboardList, Search, Package, FileText, Download, FileDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { generateJobcardPDF, generateProductionReportPDF } from "@/utils/pdfGenerator";
+import { useToast } from "@/hooks/use-toast";
 
 const JobcardManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedJobcard, setSelectedJobcard] = useState<any>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const { data: jobcards, isLoading } = useQuery({
     queryKey: ["jobcards"],
@@ -59,6 +62,55 @@ const JobcardManagement = () => {
     setDetailsDialogOpen(true);
   };
 
+  const handleExportJobcard = async (jobcard: any) => {
+    try {
+      // Fetch full jobcard data with stage tracking
+      const { data, error } = await supabase
+        .from("jobcards")
+        .select("*, inquiries(*), stage_tracking(*)")
+        .eq("id", jobcard.id)
+        .single();
+      
+      if (error) throw error;
+      
+      generateJobcardPDF(data);
+      toast({
+        title: "PDF Generated",
+        description: "Jobcard PDF has been downloaded successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to generate PDF. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleExportAllJobcards = () => {
+    if (!filteredJobcards || filteredJobcards.length === 0) {
+      toast({
+        title: "No Data",
+        description: "No jobcards available to export.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    generateProductionReportPDF({
+      jobcards: filteredJobcards,
+      dateRange: {
+        from: new Date(new Date().setMonth(new Date().getMonth() - 1)),
+        to: new Date(),
+      },
+    });
+
+    toast({
+      title: "Report Generated",
+      description: "Production report PDF has been downloaded successfully.",
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -75,6 +127,10 @@ const JobcardManagement = () => {
             <ClipboardList className="h-8 w-8 text-primary" />
             <h1 className="text-3xl font-bold">Jobcard Management</h1>
           </div>
+          <Button onClick={handleExportAllJobcards} variant="outline">
+            <FileDown className="h-4 w-4 mr-2" />
+            Export Production Report
+          </Button>
         </div>
 
         <div className="relative">
@@ -126,6 +182,10 @@ const JobcardManagement = () => {
                     <Button onClick={() => handleViewDetails(jobcard)} variant="outline" size="sm">
                       <FileText className="h-4 w-4 mr-2" />
                       View Details
+                    </Button>
+                    <Button onClick={() => handleExportJobcard(jobcard)} variant="outline" size="sm">
+                      <Download className="h-4 w-4 mr-2" />
+                      Export PDF
                     </Button>
                     <Button 
                       onClick={() => navigate(`/workshop/${jobcard.id}`)} 
