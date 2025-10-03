@@ -41,8 +41,15 @@ const ProductionManager = () => {
   });
 
   const updateInquiryMutation = useMutation({
-    mutationFn: async ({ id, status, reason, order_type }: { id: string; status: "continued" | "cancelled"; reason?: string; order_type?: string }) => {
-      const { error } = await supabase
+    mutationFn: async ({ id, status, reason, order_type, inquiry }: { 
+      id: string; 
+      status: "continued" | "cancelled"; 
+      reason?: string; 
+      order_type?: string;
+      inquiry?: any;
+    }) => {
+      // Update inquiry status
+      const { error: updateError } = await supabase
         .from("inquiries")
         .update({
           pm_review_status: status,
@@ -51,19 +58,80 @@ const ProductionManager = () => {
         })
         .eq("id", id);
       
-      if (error) throw error;
+      if (updateError) throw updateError;
+
+      // If continued, create jobcard and initialize stages
+      if (status === "continued" && inquiry && order_type) {
+        // Generate jobcard number
+        const jobcardNo = `JC-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+        
+        // Create jobcard
+        const { data: jobcard, error: jobcardError } = await supabase
+          .from("jobcards")
+          .insert({
+            jobcard_no: jobcardNo,
+            inquiry_id: id,
+            product_category: inquiry.product_category,
+            order_type: order_type,
+            status: "in_progress",
+          })
+          .select()
+          .single();
+
+        if (jobcardError) throw jobcardError;
+
+        // Fetch stages configuration for the product category
+        const { data: stages, error: stagesError } = await supabase
+          .from("production_stages_config")
+          .select("*")
+          .eq("product_category", inquiry.product_category)
+          .order("stage_order");
+
+        if (stagesError) throw stagesError;
+
+        // Initialize stage tracking for all stages
+        if (stages && stages.length > 0) {
+          const stageTrackingRecords = stages.map((stage) => ({
+            jobcard_id: jobcard.id,
+            stage_name: stage.stage_name,
+            department: stage.department,
+            status: "pending",
+          }));
+
+          const { error: trackingError } = await supabase
+            .from("stage_tracking")
+            .insert(stageTrackingRecords);
+
+          if (trackingError) throw trackingError;
+
+          // Update jobcard with first stage
+          const { error: updateJobcardError } = await supabase
+            .from("jobcards")
+            .update({ current_stage: stages[0].stage_name })
+            .eq("id", jobcard.id);
+
+          if (updateJobcardError) throw updateJobcardError;
+        }
+      }
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["pending-inquiries"] });
       queryClient.invalidateQueries({ queryKey: ["inquiries-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["jobcards"] });
       setReviewDialogOpen(false);
       setSelectedInquiry(null);
       setCancellationReason("");
       setOrderType("");
-      toast.success("Inquiry status updated");
+      
+      if (variables.status === "continued") {
+        toast.success("Order continued and job card created successfully!");
+      } else {
+        toast.success("Order cancelled");
+      }
     },
-    onError: () => {
-      toast.error("Failed to update inquiry");
+    onError: (error) => {
+      console.error("Error updating inquiry:", error);
+      toast.error("Failed to process inquiry. Please try again.");
     },
   });
 
@@ -78,6 +146,7 @@ const ProductionManager = () => {
         id: selectedInquiry.id,
         status: "continued",
         order_type: orderType,
+        inquiry: selectedInquiry,
       });
     }
   };
