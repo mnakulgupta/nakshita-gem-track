@@ -24,6 +24,7 @@ const WorkshopTracking = () => {
     weight_in: "",
     weight_out: "",
     notes: "",
+    handover_person_name: "",
   });
 
   const { data: jobcard } = useQuery({
@@ -76,7 +77,7 @@ const WorkshopTracking = () => {
       queryClient.invalidateQueries({ queryKey: ["stage-tracking"] });
       toast({ title: "Stage updated successfully" });
       setUpdateDialogOpen(false);
-      setFormData({ pcs_in: "", pcs_out: "", weight_in: "", weight_out: "", notes: "" });
+      setFormData({ pcs_in: "", pcs_out: "", weight_in: "", weight_out: "", notes: "", handover_person_name: "" });
     },
   });
 
@@ -90,6 +91,7 @@ const WorkshopTracking = () => {
         weight_in: existingTracking.weight_in?.toString() || "",
         weight_out: existingTracking.weight_out?.toString() || "",
         notes: existingTracking.notes || "",
+        handover_person_name: existingTracking.handover_person_name || "",
       });
     }
     setUpdateDialogOpen(true);
@@ -110,6 +112,8 @@ const WorkshopTracking = () => {
       weight_in: formData.weight_in ? parseFloat(formData.weight_in) : null,
       weight_out: formData.weight_out ? parseFloat(formData.weight_out) : null,
       notes: formData.notes,
+      handover_person_name: formData.handover_person_name,
+      handover_timestamp: new Date().toISOString(),
       status: "completed",
       completed_at: new Date().toISOString(),
     });
@@ -273,10 +277,23 @@ const WorkshopTracking = () => {
               rows={3}
             />
           </div>
+
+          <div className="space-y-2">
+            <Label>Handover Person Name <span className="text-destructive">*</span></Label>
+            <Input
+              value={formData.handover_person_name}
+              onChange={(e) => setFormData({ ...formData, handover_person_name: e.target.value })}
+              placeholder="Name of person completing this stage"
+              required
+            />
+          </div>
           
           <DialogFooter>
-            <Button onClick={handleSubmit} disabled={updateStageMutation.isPending}>
-              Update Stage
+            <Button 
+              onClick={handleSubmit} 
+              disabled={updateStageMutation.isPending || !formData.handover_person_name}
+            >
+              Update Stage & Sign Off
             </Button>
           </DialogFooter>
         </DialogContent>

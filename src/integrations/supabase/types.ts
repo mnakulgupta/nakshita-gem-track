@@ -300,6 +300,9 @@ export type Database = {
           completed_at: string | null
           created_at: string | null
           department: string
+          handover_person_name: string | null
+          handover_person_signature: string | null
+          handover_timestamp: string | null
           id: string
           jobcard_id: string | null
           notes: string | null
@@ -317,6 +320,9 @@ export type Database = {
           completed_at?: string | null
           created_at?: string | null
           department: string
+          handover_person_name?: string | null
+          handover_person_signature?: string | null
+          handover_timestamp?: string | null
           id?: string
           jobcard_id?: string | null
           notes?: string | null
@@ -334,6 +340,9 @@ export type Database = {
           completed_at?: string | null
           created_at?: string | null
           department?: string
+          handover_person_name?: string | null
+          handover_person_signature?: string | null
+          handover_timestamp?: string | null
           id?: string
           jobcard_id?: string | null
           notes?: string | null

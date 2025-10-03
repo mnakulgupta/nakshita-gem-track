@@ -7,15 +7,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ClipboardList, Search, Package, FileText, Download, FileDown } from "lucide-react";
+import { ClipboardList, Search, Package, FileText, Download, FileDown, Printer } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { generateJobcardPDF, generateProductionReportPDF } from "@/utils/pdfGenerator";
 import { useToast } from "@/hooks/use-toast";
+import { JobCardPrintView } from "@/components/JobCardPrintView";
 
 const JobcardManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedJobcard, setSelectedJobcard] = useState<any>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [printViewOpen, setPrintViewOpen] = useState(false);
+  const [printJobcard, setPrintJobcard] = useState<any>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -38,6 +41,21 @@ const JobcardManagement = () => {
       if (error) throw error;
       return data;
     },
+  });
+
+  const { data: stages } = useQuery({
+    queryKey: ["production-stages", printJobcard?.product_category],
+    queryFn: async () => {
+      if (!printJobcard?.product_category) return [];
+      const { data, error } = await supabase
+        .from("production_stages_config")
+        .select("*")
+        .eq("product_category", printJobcard.product_category)
+        .order("stage_order", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!printJobcard,
   });
 
   const filteredJobcards = jobcards?.filter(
@@ -85,6 +103,11 @@ const JobcardManagement = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const handlePrintJobcard = (jobcard: any) => {
+    setPrintJobcard(jobcard);
+    setPrintViewOpen(true);
   };
 
   const handleExportAllJobcards = () => {
@@ -179,6 +202,10 @@ const JobcardManagement = () => {
                     </div>
                   </div>
                   <div className="flex gap-2 mt-4">
+                    <Button onClick={() => handlePrintJobcard(jobcard)} variant="default" size="sm">
+                      <Printer className="h-4 w-4 mr-2" />
+                      Print Job Card
+                    </Button>
                     <Button onClick={() => handleViewDetails(jobcard)} variant="outline" size="sm">
                       <FileText className="h-4 w-4 mr-2" />
                       View Details
@@ -189,7 +216,7 @@ const JobcardManagement = () => {
                     </Button>
                     <Button 
                       onClick={() => navigate(`/workshop/${jobcard.id}`)} 
-                      variant="default" 
+                      variant="outline" 
                       size="sm"
                     >
                       <Package className="h-4 w-4 mr-2" />
@@ -261,6 +288,15 @@ const JobcardManagement = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {printJobcard && stages && (
+        <JobCardPrintView
+          jobcard={printJobcard}
+          stages={stages}
+          open={printViewOpen}
+          onOpenChange={setPrintViewOpen}
+        />
+      )}
     </div>
   );
 };
