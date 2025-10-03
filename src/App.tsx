@@ -12,6 +12,9 @@ import Dashboard from "./pages/Dashboard";
 import NewInquiry from "./pages/NewInquiry";
 import Inquiries from "./pages/Inquiries";
 import ProductionManager from "./pages/ProductionManager";
+import JobcardManagement from "./pages/JobcardManagement";
+import WorkshopTracking from "./pages/WorkshopTracking";
+import DesignDepartment from "./pages/DesignDepartment";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -60,6 +63,36 @@ const App = () => (
                 <ProtectedRoute requiredRoles={["admin", "sales"]}>
                   <AppLayout>
                     <Inquiries />
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/jobcards"
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <JobcardManagement />
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/workshop/:jobcardId"
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <WorkshopTracking />
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/design"
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <DesignDepartment />
                   </AppLayout>
                 </ProtectedRoute>
               }

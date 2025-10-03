@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +23,7 @@ const ProductionManager = () => {
   const [selectedInquiry, setSelectedInquiry] = useState<any>(null);
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
   const [cancellationReason, setCancellationReason] = useState("");
+  const [orderType, setOrderType] = useState<string>("");
   const queryClient = useQueryClient();
 
   const { data: inquiries, isLoading } = useQuery({
@@ -39,12 +41,13 @@ const ProductionManager = () => {
   });
 
   const updateInquiryMutation = useMutation({
-    mutationFn: async ({ id, status, reason }: { id: string; status: "continued" | "cancelled"; reason?: string }) => {
+    mutationFn: async ({ id, status, reason, order_type }: { id: string; status: "continued" | "cancelled"; reason?: string; order_type?: string }) => {
       const { error } = await supabase
         .from("inquiries")
         .update({
           pm_review_status: status,
           cancellation_reason: reason || null,
+          order_type: order_type || null,
         })
         .eq("id", id);
       
@@ -56,6 +59,7 @@ const ProductionManager = () => {
       setReviewDialogOpen(false);
       setSelectedInquiry(null);
       setCancellationReason("");
+      setOrderType("");
       toast.success("Inquiry status updated");
     },
     onError: () => {
@@ -69,10 +73,11 @@ const ProductionManager = () => {
   };
 
   const handleContinue = () => {
-    if (selectedInquiry) {
+    if (selectedInquiry && orderType) {
       updateInquiryMutation.mutate({
         id: selectedInquiry.id,
         status: "continued",
+        order_type: orderType,
       });
     }
   };
@@ -281,6 +286,18 @@ const ProductionManager = () => {
                 <Label>Decision</Label>
                 <div className="space-y-4">
                   <div>
+                    <Label>Order Type</Label>
+                    <Select value={orderType} onValueChange={setOrderType}>
+                      <SelectTrigger className="mt-2">
+                        <SelectValue placeholder="Select order type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="new_design">New Design Order</SelectItem>
+                        <SelectItem value="repeated_design">Repeated Design Order</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
                     <Label htmlFor="cancellation-reason">
                       To cancel this order, provide a reason:
                     </Label>
@@ -318,7 +335,7 @@ const ProductionManager = () => {
             </Button>
             <Button
               onClick={handleContinue}
-              disabled={updateInquiryMutation.isPending}
+              disabled={updateInquiryMutation.isPending || !orderType}
             >
               <CheckCircle className="h-4 w-4 mr-2" />
               Continue Order

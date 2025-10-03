@@ -14,6 +14,80 @@ export type Database = {
   }
   public: {
     Tables: {
+      design_details: {
+        Row: {
+          cad_by: string | null
+          cad_completion_date: string | null
+          cad_file_link: string | null
+          cad_photo_url: string | null
+          cam_received_date: string | null
+          cam_sent_date: string | null
+          cam_vendor: string | null
+          cam_weight_grams: number | null
+          created_at: string | null
+          date: string | null
+          dye_creation_date: string | null
+          dye_vendor: string | null
+          dye_weight: number | null
+          final_dye_no: string | null
+          id: string
+          jobcard_id: string | null
+          size_dimensions: string | null
+          stone_specifications: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          cad_by?: string | null
+          cad_completion_date?: string | null
+          cad_file_link?: string | null
+          cad_photo_url?: string | null
+          cam_received_date?: string | null
+          cam_sent_date?: string | null
+          cam_vendor?: string | null
+          cam_weight_grams?: number | null
+          created_at?: string | null
+          date?: string | null
+          dye_creation_date?: string | null
+          dye_vendor?: string | null
+          dye_weight?: number | null
+          final_dye_no?: string | null
+          id?: string
+          jobcard_id?: string | null
+          size_dimensions?: string | null
+          stone_specifications?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          cad_by?: string | null
+          cad_completion_date?: string | null
+          cad_file_link?: string | null
+          cad_photo_url?: string | null
+          cam_received_date?: string | null
+          cam_sent_date?: string | null
+          cam_vendor?: string | null
+          cam_weight_grams?: number | null
+          created_at?: string | null
+          date?: string | null
+          dye_creation_date?: string | null
+          dye_vendor?: string | null
+          dye_weight?: number | null
+          final_dye_no?: string | null
+          id?: string
+          jobcard_id?: string | null
+          size_dimensions?: string | null
+          stone_specifications?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "design_details_jobcard_id_fkey"
+            columns: ["jobcard_id"]
+            isOneToOne: false
+            referencedRelation: "jobcards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inquiries: {
         Row: {
           cancellation_reason: string | null
@@ -25,6 +99,7 @@ export type Database = {
           id: string
           inquiry_id: string
           metal_details: string | null
+          order_type: string | null
           pm_review_status: Database["public"]["Enums"]["inquiry_status"]
           polish_color: string | null
           product_category:
@@ -46,6 +121,7 @@ export type Database = {
           id?: string
           inquiry_id: string
           metal_details?: string | null
+          order_type?: string | null
           pm_review_status?: Database["public"]["Enums"]["inquiry_status"]
           polish_color?: string | null
           product_category?:
@@ -67,6 +143,7 @@ export type Database = {
           id?: string
           inquiry_id?: string
           metal_details?: string | null
+          order_type?: string | null
           pm_review_status?: Database["public"]["Enums"]["inquiry_status"]
           polish_color?: string | null
           product_category?:
@@ -79,6 +156,50 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      jobcards: {
+        Row: {
+          created_at: string | null
+          current_stage: string | null
+          id: string
+          inquiry_id: string | null
+          jobcard_no: string
+          order_type: string
+          product_category: Database["public"]["Enums"]["product_category"]
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          current_stage?: string | null
+          id?: string
+          inquiry_id?: string | null
+          jobcard_no: string
+          order_type: string
+          product_category: Database["public"]["Enums"]["product_category"]
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          current_stage?: string | null
+          id?: string
+          inquiry_id?: string | null
+          jobcard_no?: string
+          order_type?: string
+          product_category?: Database["public"]["Enums"]["product_category"]
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jobcards_inquiry_id_fkey"
+            columns: ["inquiry_id"]
+            isOneToOne: false
+            referencedRelation: "inquiries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       product_categories_config: {
         Row: {
@@ -101,6 +222,48 @@ export type Database = {
           default_stages?: string[] | null
           display_name?: string
           id?: string
+        }
+        Relationships: []
+      }
+      production_stages_config: {
+        Row: {
+          created_at: string | null
+          department: string
+          id: string
+          is_design_stage: boolean | null
+          product_category: Database["public"]["Enums"]["product_category"]
+          stage_name: string
+          stage_order: number
+          track_pcs_in: boolean | null
+          track_pcs_out: boolean | null
+          track_weight_in: boolean | null
+          track_weight_out: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          department: string
+          id?: string
+          is_design_stage?: boolean | null
+          product_category: Database["public"]["Enums"]["product_category"]
+          stage_name: string
+          stage_order: number
+          track_pcs_in?: boolean | null
+          track_pcs_out?: boolean | null
+          track_weight_in?: boolean | null
+          track_weight_out?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          department?: string
+          id?: string
+          is_design_stage?: boolean | null
+          product_category?: Database["public"]["Enums"]["product_category"]
+          stage_name?: string
+          stage_order?: number
+          track_pcs_in?: boolean | null
+          track_pcs_out?: boolean | null
+          track_weight_in?: boolean | null
+          track_weight_out?: boolean | null
         }
         Relationships: []
       }
@@ -130,6 +293,68 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      stage_tracking: {
+        Row: {
+          assigned_to: string | null
+          completed_at: string | null
+          created_at: string | null
+          department: string
+          id: string
+          jobcard_id: string | null
+          notes: string | null
+          pcs_in: number | null
+          pcs_out: number | null
+          stage_name: string
+          started_at: string | null
+          status: string | null
+          updated_at: string | null
+          weight_in: number | null
+          weight_out: number | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          department: string
+          id?: string
+          jobcard_id?: string | null
+          notes?: string | null
+          pcs_in?: number | null
+          pcs_out?: number | null
+          stage_name: string
+          started_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+          weight_in?: number | null
+          weight_out?: number | null
+        }
+        Update: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          department?: string
+          id?: string
+          jobcard_id?: string | null
+          notes?: string | null
+          pcs_in?: number | null
+          pcs_out?: number | null
+          stage_name?: string
+          started_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+          weight_in?: number | null
+          weight_out?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stage_tracking_jobcard_id_fkey"
+            columns: ["jobcard_id"]
+            isOneToOne: false
+            referencedRelation: "jobcards"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

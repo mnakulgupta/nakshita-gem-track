@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { FileText, LayoutDashboard, Settings, LogOut, Gem, Package, PlusCircle } from "lucide-react";
+import { FileText, LayoutDashboard, Settings, LogOut, Gem, Package, PlusCircle, ClipboardList, Palette } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -38,6 +38,18 @@ const navigationItems = [
     title: "Production Manager",
     url: "/production",
     icon: Settings,
+    roles: ["admin", "production_manager"],
+  },
+  {
+    title: "Jobcards",
+    url: "/jobcards",
+    icon: ClipboardList,
+    roles: ["admin", "production_manager", "sales"],
+  },
+  {
+    title: "Design Department",
+    url: "/design",
+    icon: Palette,
     roles: ["admin", "production_manager"],
   },
 ];
