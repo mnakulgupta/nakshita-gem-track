@@ -10,6 +10,7 @@ import ProtectedRoute from "@/components/layout/ProtectedRoute";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import NewInquiry from "./pages/NewInquiry";
+import Inquiries from "./pages/Inquiries";
 import ProductionManager from "./pages/ProductionManager";
 import NotFound from "./pages/NotFound";
 
@@ -49,6 +50,16 @@ const App = () => (
                 <ProtectedRoute>
                   <AppLayout>
                     <Dashboard />
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/inquiries"
+              element={
+                <ProtectedRoute requiredRoles={["admin", "sales"]}>
+                  <AppLayout>
+                    <Inquiries />
                   </AppLayout>
                 </ProtectedRoute>
               }

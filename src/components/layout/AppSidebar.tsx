@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { FileText, LayoutDashboard, Settings, LogOut, Gem } from "lucide-react";
+import { FileText, LayoutDashboard, Settings, LogOut, Gem, Package, PlusCircle } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -23,9 +23,15 @@ const navigationItems = [
     roles: ["admin", "sales", "production_manager"],
   },
   {
+    title: "All Inquiries",
+    url: "/inquiries",
+    icon: Package,
+    roles: ["admin", "sales"],
+  },
+  {
     title: "New Inquiry",
     url: "/inquiry/new",
-    icon: FileText,
+    icon: PlusCircle,
     roles: ["admin", "sales"],
   },
   {
