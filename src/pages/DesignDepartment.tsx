@@ -111,6 +111,7 @@ const DesignDepartment = () => {
       dye_vendor: "",
       part_name: "",
       notes: "",
+      wax_pcs_per_dye: "",
     }]);
   };
 
@@ -166,6 +167,7 @@ const DesignDepartment = () => {
           dye_vendor: dye.dye_vendor,
           part_name: dye.part_name,
           notes: dye.notes,
+          wax_pcs_per_dye: dye.wax_pcs_per_dye ? parseInt(dye.wax_pcs_per_dye) : null,
         }));
 
         const { error: dyeError } = await supabase
@@ -211,7 +213,16 @@ const DesignDepartment = () => {
                   Client: {jobcard.inquiries?.client_name}
                 </p>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
+                {jobcard.inquiries?.reference_image_url && (
+                  <div>
+                    <img 
+                      src={jobcard.inquiries.reference_image_url} 
+                      alt="Reference" 
+                      className="w-32 h-32 object-cover rounded-md border"
+                    />
+                  </div>
+                )}
                 <div className="flex gap-2">
                   <Button onClick={() => handleOpenDesignForm(jobcard)} size="sm">
                     <Upload className="h-4 w-4 mr-2" />
@@ -428,6 +439,16 @@ const DesignDepartment = () => {
                               type="date"
                               value={dye.dye_creation_date}
                               onChange={(e) => updateDye(index, "dye_creation_date", e.target.value)}
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label>Wax Pieces per Dye *</Label>
+                            <Input
+                              type="number"
+                              value={dye.wax_pcs_per_dye}
+                              onChange={(e) => updateDye(index, "wax_pcs_per_dye", e.target.value)}
+                              placeholder="How many wax pcs from this dye"
                             />
                           </div>
 

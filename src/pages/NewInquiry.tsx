@@ -85,6 +85,9 @@ const NewInquiry = () => {
       // Generate inquiry ID
       const inquiryId = `INQ-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
 
+      const orderType = formData.get("orderType") as string || "new_design";
+      const skuNumber = formData.get("skuNumber") as string;
+
       // Create inquiry
       const { error: insertError } = await supabase.from("inquiries").insert({
         inquiry_id: inquiryId,
@@ -100,6 +103,7 @@ const NewInquiry = () => {
         special_instructions: validatedData.specialInstructions || null,
         sales_person_id: user?.id,
         pm_review_status: "pending",
+        order_type: orderType,
       });
 
       if (insertError) throw insertError;
@@ -189,6 +193,34 @@ const NewInquiry = () => {
                 <Label htmlFor="dueDate">Due Date</Label>
                 <Input id="dueDate" name="dueDate" type="date" />
               </div>
+            </div>
+
+            {/* Order Type Selection */}
+            <div className="space-y-2">
+              <Label htmlFor="orderType">Order Type *</Label>
+              <Select name="orderType" defaultValue="new_design">
+                <SelectTrigger>
+                  <SelectValue placeholder="Select order type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="new_design">New Design</SelectItem>
+                  <SelectItem value="repeated">Repeated (Have SKU)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* SKU Number for repeated orders */}
+            <div className="space-y-2">
+              <Label htmlFor="skuNumber">SKU Number (for repeated orders)</Label>
+              <Input 
+                id="skuNumber" 
+                name="skuNumber" 
+                placeholder="Enter SKU number if this is a repeated order"
+                maxLength={100}
+              />
+              <p className="text-xs text-muted-foreground">
+                If you enter a SKU number, design details will be auto-populated from previous order
+              </p>
             </div>
 
             {/* Product Details */}

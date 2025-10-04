@@ -99,7 +99,9 @@ export type Database = {
           jobcard_id: string | null
           notes: string | null
           part_name: string | null
+          sku_number: string | null
           updated_at: string | null
+          wax_pcs_per_dye: number | null
         }
         Insert: {
           created_at?: string | null
@@ -111,7 +113,9 @@ export type Database = {
           jobcard_id?: string | null
           notes?: string | null
           part_name?: string | null
+          sku_number?: string | null
           updated_at?: string | null
+          wax_pcs_per_dye?: number | null
         }
         Update: {
           created_at?: string | null
@@ -123,7 +127,9 @@ export type Database = {
           jobcard_id?: string | null
           notes?: string | null
           part_name?: string | null
+          sku_number?: string | null
           updated_at?: string | null
+          wax_pcs_per_dye?: number | null
         }
         Relationships: [
           {
@@ -214,6 +220,7 @@ export type Database = {
           order_type: string
           product_category: Database["public"]["Enums"]["product_category"]
           pushed_to_workshop: boolean | null
+          sku_number: string | null
           status: string | null
           updated_at: string | null
         }
@@ -226,6 +233,7 @@ export type Database = {
           order_type: string
           product_category: Database["public"]["Enums"]["product_category"]
           pushed_to_workshop?: boolean | null
+          sku_number?: string | null
           status?: string | null
           updated_at?: string | null
         }
@@ -238,6 +246,7 @@ export type Database = {
           order_type?: string
           product_category?: Database["public"]["Enums"]["product_category"]
           pushed_to_workshop?: boolean | null
+          sku_number?: string | null
           status?: string | null
           updated_at?: string | null
         }

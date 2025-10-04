@@ -137,6 +137,16 @@ const WorkshopFloor = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
+                      {jobcard.inquiries?.reference_image_url && (
+                        <div>
+                          <p className="text-sm text-muted-foreground mb-2">Reference Image</p>
+                          <img 
+                            src={jobcard.inquiries.reference_image_url} 
+                            alt="Reference" 
+                            className="w-full h-40 object-cover rounded-md border"
+                          />
+                        </div>
+                      )}
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <p className="text-sm text-muted-foreground">Product Category</p>

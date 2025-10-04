@@ -206,6 +206,15 @@ const JobcardManagement = () => {
                   {getStatusBadge(jobcard.status)}
                 </CardHeader>
                 <CardContent>
+                  {jobcard.inquiries?.reference_image_url && (
+                    <div className="mb-4">
+                      <img 
+                        src={jobcard.inquiries.reference_image_url} 
+                        alt="Reference" 
+                        className="w-32 h-32 object-cover rounded-md border"
+                      />
+                    </div>
+                  )}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <p className="text-sm text-muted-foreground">Client</p>

@@ -32,7 +32,7 @@ const WorkshopTracking = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("jobcards")
-        .select("*, inquiries(client_name, inquiry_id)")
+        .select("*, inquiries(client_name, inquiry_id, reference_image_url)")
         .eq("id", jobcardId)
         .single();
       if (error) throw error;
@@ -135,6 +135,16 @@ const WorkshopTracking = () => {
             <p className="text-muted-foreground">
               Client: {jobcard?.inquiries?.client_name}
             </p>
+            {jobcard?.inquiries?.reference_image_url && (
+              <div className="mt-4">
+                <p className="text-sm text-muted-foreground mb-2">Reference Image</p>
+                <img 
+                  src={jobcard.inquiries.reference_image_url} 
+                  alt="Reference" 
+                  className="w-48 h-48 object-cover rounded-md border"
+                />
+              </div>
+            )}
           </CardHeader>
         </Card>
 
