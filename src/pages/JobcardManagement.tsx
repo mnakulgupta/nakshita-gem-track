@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ClipboardList, Search, Package, FileText, Download, FileDown, Printer } from "lucide-react";
+import { ClipboardList, Search, Package, FileText, Download, FileDown, Printer, Send } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { generateJobcardPDF, generateProductionReportPDF } from "@/utils/pdfGenerator";
 import { useToast } from "@/hooks/use-toast";
@@ -21,6 +21,7 @@ const JobcardManagement = () => {
   const [printJobcard, setPrintJobcard] = useState<any>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: jobcards, isLoading } = useQuery({
     queryKey: ["jobcards"],
@@ -109,6 +110,30 @@ const JobcardManagement = () => {
     setPrintJobcard(jobcard);
     setPrintViewOpen(true);
   };
+
+  const pushToWorkshopMutation = useMutation({
+    mutationFn: async (jobcardId: string) => {
+      const { error } = await supabase
+        .from("jobcards")
+        .update({ pushed_to_workshop: true })
+        .eq("id", jobcardId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["jobcards"] });
+      toast({
+        title: "Pushed to Workshop",
+        description: "Jobcard is now visible on the workshop floor.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to push jobcard to workshop.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleExportAllJobcards = () => {
     if (!filteredJobcards || filteredJobcards.length === 0) {
@@ -202,7 +227,18 @@ const JobcardManagement = () => {
                     </div>
                   </div>
                   <div className="flex gap-2 mt-4">
-                    <Button onClick={() => handlePrintJobcard(jobcard)} variant="default" size="sm">
+                    {!jobcard.pushed_to_workshop && (
+                      <Button 
+                        onClick={() => pushToWorkshopMutation.mutate(jobcard.id)} 
+                        variant="default" 
+                        size="sm"
+                        disabled={pushToWorkshopMutation.isPending}
+                      >
+                        <Send className="h-4 w-4 mr-2" />
+                        Push to Workshop
+                      </Button>
+                    )}
+                    <Button onClick={() => handlePrintJobcard(jobcard)} variant="outline" size="sm">
                       <Printer className="h-4 w-4 mr-2" />
                       Print Job Card
                     </Button>

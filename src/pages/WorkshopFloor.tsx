@@ -26,6 +26,7 @@ const WorkshopFloor = () => {
           )
         `)
         .in("status", ["in_progress", "on_hold"])
+        .eq("pushed_to_workshop", true)
         .order("created_at", { ascending: false });
 
       if (error) throw error;

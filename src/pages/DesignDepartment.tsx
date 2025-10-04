@@ -5,9 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Palette, Upload, Printer } from "lucide-react";
+import { Palette, Upload, Printer, Plus, Trash2 } from "lucide-react";
 import { JobCardPrintView } from "@/components/JobCardPrintView";
 
 const DesignDepartment = () => {
@@ -29,11 +31,9 @@ const DesignDepartment = () => {
     cam_sent_date: "",
     cam_received_date: "",
     cam_weight_grams: "",
-    dye_vendor: "",
-    dye_weight: "",
-    final_dye_no: "",
-    dye_creation_date: "",
   });
+
+  const [dyes, setDyes] = useState<any[]>([]);
 
   const { data: jobcards, isLoading } = useQuery({
     queryKey: ["design-jobcards"],
@@ -43,7 +43,8 @@ const DesignDepartment = () => {
         .select(`
           *,
           inquiries (client_name, inquiry_id, reference_image_url),
-          design_details (*)
+          design_details (*),
+          dye_details (*)
         `)
         .eq("order_type", "new_design")
         .order("created_at", { ascending: false });
@@ -95,39 +96,94 @@ const DesignDepartment = () => {
         cam_sent_date: existingDetails.cam_sent_date || "",
         cam_received_date: existingDetails.cam_received_date || "",
         cam_weight_grams: existingDetails.cam_weight_grams?.toString() || "",
-        dye_vendor: existingDetails.dye_vendor || "",
-        dye_weight: existingDetails.dye_weight?.toString() || "",
-        final_dye_no: existingDetails.final_dye_no || "",
-        dye_creation_date: existingDetails.dye_creation_date || "",
       });
     }
+    // Load existing dyes
+    setDyes(jobcard.dye_details || []);
     setDesignDialogOpen(true);
   };
 
-  const handleSubmit = () => {
+  const addDye = () => {
+    setDyes([...dyes, {
+      dye_number: "",
+      dye_weight: "",
+      dye_creation_date: "",
+      dye_vendor: "",
+      part_name: "",
+      notes: "",
+    }]);
+  };
+
+  const removeDye = (index: number) => {
+    setDyes(dyes.filter((_, i) => i !== index));
+  };
+
+  const updateDye = (index: number, field: string, value: any) => {
+    const newDyes = [...dyes];
+    newDyes[index] = { ...newDyes[index], [field]: value };
+    setDyes(newDyes);
+  };
+
+  const handleSubmit = async () => {
     if (!selectedJobcard) return;
 
     const existingDetails = selectedJobcard.design_details?.[0];
 
-    saveDesignDetailsMutation.mutate({
-      id: existingDetails?.id,
-      jobcard_id: selectedJobcard.id,
-      date: formData.date,
-      cad_photo_url: formData.cad_photo_url,
-      size_dimensions: formData.size_dimensions,
-      stone_specifications: formData.stone_specifications,
-      cad_by: formData.cad_by,
-      cad_completion_date: formData.cad_completion_date || null,
-      cad_file_link: formData.cad_file_link,
-      cam_vendor: formData.cam_vendor,
-      cam_sent_date: formData.cam_sent_date || null,
-      cam_received_date: formData.cam_received_date || null,
-      cam_weight_grams: formData.cam_weight_grams ? parseFloat(formData.cam_weight_grams) : null,
-      dye_vendor: formData.dye_vendor,
-      dye_weight: formData.dye_weight ? parseFloat(formData.dye_weight) : null,
-      final_dye_no: formData.final_dye_no,
-      dye_creation_date: formData.dye_creation_date || null,
-    });
+    try {
+      // Save design details
+      const { error: designError } = await supabase.from("design_details").upsert({
+        id: existingDetails?.id,
+        jobcard_id: selectedJobcard.id,
+        date: formData.date,
+        cad_photo_url: formData.cad_photo_url,
+        size_dimensions: formData.size_dimensions,
+        stone_specifications: formData.stone_specifications,
+        cad_by: formData.cad_by,
+        cad_completion_date: formData.cad_completion_date || null,
+        cad_file_link: formData.cad_file_link,
+        cam_vendor: formData.cam_vendor,
+        cam_sent_date: formData.cam_sent_date || null,
+        cam_received_date: formData.cam_received_date || null,
+        cam_weight_grams: formData.cam_weight_grams ? parseFloat(formData.cam_weight_grams) : null,
+      });
+
+      if (designError) throw designError;
+
+      // Delete existing dyes and insert new ones
+      const { error: deleteError } = await supabase
+        .from("dye_details")
+        .delete()
+        .eq("jobcard_id", selectedJobcard.id);
+
+      if (deleteError) throw deleteError;
+
+      if (dyes.length > 0) {
+        const dyeData = dyes.map(dye => ({
+          jobcard_id: selectedJobcard.id,
+          dye_number: dye.dye_number,
+          dye_weight: dye.dye_weight ? parseFloat(dye.dye_weight) : null,
+          dye_creation_date: dye.dye_creation_date || null,
+          dye_vendor: dye.dye_vendor,
+          part_name: dye.part_name,
+          notes: dye.notes,
+        }));
+
+        const { error: dyeError } = await supabase
+          .from("dye_details")
+          .insert(dyeData);
+
+        if (dyeError) throw dyeError;
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["design-jobcards"] });
+      toast({ title: "Design details saved successfully" });
+      setDesignDialogOpen(false);
+    } catch (error) {
+      toast({ 
+        title: "Error saving design details", 
+        variant: "destructive" 
+      });
+    }
   };
 
   if (isLoading) {
@@ -185,7 +241,15 @@ const DesignDepartment = () => {
             <DialogTitle>Design Details - {selectedJobcard?.jobcard_no}</DialogTitle>
           </DialogHeader>
 
-          <div className="grid grid-cols-2 gap-4">
+          <Tabs defaultValue="cad" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="cad">CAD Details</TabsTrigger>
+              <TabsTrigger value="cam">CAM Details</TabsTrigger>
+              <TabsTrigger value="dye">Dye Details</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="cad" className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Date</Label>
               <Input
@@ -240,16 +304,20 @@ const DesignDepartment = () => {
               />
             </div>
 
-            <div className="space-y-2 col-span-2">
-              <Label>CAD File Link</Label>
-              <Input
-                value={formData.cad_file_link}
-                onChange={(e) => setFormData({ ...formData, cad_file_link: e.target.value })}
-                placeholder="Cloud storage link"
-              />
-            </div>
+                <div className="space-y-2 col-span-2">
+                  <Label>CAD File Link</Label>
+                  <Input
+                    value={formData.cad_file_link}
+                    onChange={(e) => setFormData({ ...formData, cad_file_link: e.target.value })}
+                    placeholder="Cloud storage link"
+                  />
+                </div>
+              </div>
+            </TabsContent>
 
-            <div className="space-y-2">
+            <TabsContent value="cam" className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
               <Label>CAM Vendor</Label>
               <Input
                 value={formData.cam_vendor}
@@ -276,59 +344,114 @@ const DesignDepartment = () => {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label>CAM Weight (grams)</Label>
-              <Input
-                type="number"
-                step="0.001"
-                value={formData.cam_weight_grams}
-                onChange={(e) => setFormData({ ...formData, cam_weight_grams: e.target.value })}
-                placeholder="Weight in grams"
-              />
-            </div>
+                <div className="space-y-2">
+                  <Label>CAM Weight (grams)</Label>
+                  <Input
+                    type="number"
+                    step="0.001"
+                    value={formData.cam_weight_grams}
+                    onChange={(e) => setFormData({ ...formData, cam_weight_grams: e.target.value })}
+                    placeholder="Weight in grams"
+                  />
+                </div>
+              </div>
+            </TabsContent>
 
-            <div className="space-y-2">
-              <Label>DYE Vendor</Label>
-              <Input
-                value={formData.dye_vendor}
-                onChange={(e) => setFormData({ ...formData, dye_vendor: e.target.value })}
-                placeholder="Vendor name"
-              />
-            </div>
+            <TabsContent value="dye" className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold">Dye Details (Multiple Parts)</h3>
+                <Button onClick={addDye} size="sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Dye
+                </Button>
+              </div>
 
-            <div className="space-y-2">
-              <Label>DYE Weight (grams)</Label>
-              <Input
-                type="number"
-                step="0.001"
-                value={formData.dye_weight}
-                onChange={(e) => setFormData({ ...formData, dye_weight: e.target.value })}
-                placeholder="Weight in grams"
-              />
-            </div>
+              {dyes.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No dyes added yet. Click "Add Dye" to add dye details.</p>
+              ) : (
+                <div className="space-y-6">
+                  {dyes.map((dye, index) => (
+                    <Card key={index}>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Dye {index + 1}</CardTitle>
+                        <Button 
+                          variant="destructive" 
+                          size="sm" 
+                          onClick={() => removeDye(index)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>Dye Number *</Label>
+                            <Input
+                              value={dye.dye_number}
+                              onChange={(e) => updateDye(index, "dye_number", e.target.value)}
+                              placeholder="e.g., DYE-001"
+                            />
+                          </div>
 
-            <div className="space-y-2">
-              <Label>Final DYE Number</Label>
-              <Input
-                value={formData.final_dye_no}
-                onChange={(e) => setFormData({ ...formData, final_dye_no: e.target.value })}
-                placeholder="DYE number"
-              />
-            </div>
+                          <div className="space-y-2">
+                            <Label>Part Name</Label>
+                            <Input
+                              value={dye.part_name}
+                              onChange={(e) => updateDye(index, "part_name", e.target.value)}
+                              placeholder="e.g., Top Ring, Base"
+                            />
+                          </div>
 
-            <div className="space-y-2">
-              <Label>DYE Creation Date</Label>
-              <Input
-                type="date"
-                value={formData.dye_creation_date}
-                onChange={(e) => setFormData({ ...formData, dye_creation_date: e.target.value })}
-              />
-            </div>
-          </div>
+                          <div className="space-y-2">
+                            <Label>Dye Weight (grams)</Label>
+                            <Input
+                              type="number"
+                              step="0.001"
+                              value={dye.dye_weight}
+                              onChange={(e) => updateDye(index, "dye_weight", e.target.value)}
+                              placeholder="Weight in grams"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label>Dye Vendor</Label>
+                            <Input
+                              value={dye.dye_vendor}
+                              onChange={(e) => updateDye(index, "dye_vendor", e.target.value)}
+                              placeholder="Vendor name"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label>Dye Creation Date</Label>
+                            <Input
+                              type="date"
+                              value={dye.dye_creation_date}
+                              onChange={(e) => updateDye(index, "dye_creation_date", e.target.value)}
+                            />
+                          </div>
+
+                          <div className="space-y-2 col-span-2">
+                            <Label>Notes</Label>
+                            <Textarea
+                              value={dye.notes}
+                              onChange={(e) => updateDye(index, "notes", e.target.value)}
+                              placeholder="Additional notes about this dye"
+                              rows={2}
+                            />
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
 
           <DialogFooter>
-            <Button onClick={handleSubmit} disabled={saveDesignDetailsMutation.isPending}>
-              Save Design Details
+            <Button onClick={handleSubmit}>
+              Save All Design Details
             </Button>
           </DialogFooter>
         </DialogContent>

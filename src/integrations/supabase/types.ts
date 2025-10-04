@@ -88,6 +88,53 @@ export type Database = {
           },
         ]
       }
+      dye_details: {
+        Row: {
+          created_at: string | null
+          dye_creation_date: string | null
+          dye_number: string
+          dye_vendor: string | null
+          dye_weight: number | null
+          id: string
+          jobcard_id: string | null
+          notes: string | null
+          part_name: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          dye_creation_date?: string | null
+          dye_number: string
+          dye_vendor?: string | null
+          dye_weight?: number | null
+          id?: string
+          jobcard_id?: string | null
+          notes?: string | null
+          part_name?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          dye_creation_date?: string | null
+          dye_number?: string
+          dye_vendor?: string | null
+          dye_weight?: number | null
+          id?: string
+          jobcard_id?: string | null
+          notes?: string | null
+          part_name?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dye_details_jobcard_id_fkey"
+            columns: ["jobcard_id"]
+            isOneToOne: false
+            referencedRelation: "jobcards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inquiries: {
         Row: {
           cancellation_reason: string | null
@@ -166,6 +213,7 @@ export type Database = {
           jobcard_no: string
           order_type: string
           product_category: Database["public"]["Enums"]["product_category"]
+          pushed_to_workshop: boolean | null
           status: string | null
           updated_at: string | null
         }
@@ -177,6 +225,7 @@ export type Database = {
           jobcard_no: string
           order_type: string
           product_category: Database["public"]["Enums"]["product_category"]
+          pushed_to_workshop?: boolean | null
           status?: string | null
           updated_at?: string | null
         }
@@ -188,6 +237,7 @@ export type Database = {
           jobcard_no?: string
           order_type?: string
           product_category?: Database["public"]["Enums"]["product_category"]
+          pushed_to_workshop?: boolean | null
           status?: string | null
           updated_at?: string | null
         }
