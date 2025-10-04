@@ -406,6 +406,7 @@ export type Database = {
         | "production_manager"
         | "designer"
         | "workshop"
+        | "design"
       inquiry_status:
         | "pending"
         | "in_review"
@@ -555,6 +556,7 @@ export const Constants = {
         "production_manager",
         "designer",
         "workshop",
+        "design",
       ],
       inquiry_status: [
         "pending",
