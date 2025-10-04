@@ -7,13 +7,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Palette, Upload } from "lucide-react";
+import { Palette, Upload, Printer } from "lucide-react";
+import { JobCardPrintView } from "@/components/JobCardPrintView";
 
 const DesignDepartment = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedJobcard, setSelectedJobcard] = useState<any>(null);
   const [designDialogOpen, setDesignDialogOpen] = useState(false);
+  const [printViewOpen, setPrintViewOpen] = useState(false);
+  const [printJobcard, setPrintJobcard] = useState<any>(null);
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split("T")[0],
     cad_photo_url: "",
@@ -39,7 +42,7 @@ const DesignDepartment = () => {
         .from("jobcards")
         .select(`
           *,
-          inquiries (client_name, inquiry_id),
+          inquiries (client_name, inquiry_id, reference_image_url),
           design_details (*)
         `)
         .eq("order_type", "new_design")
@@ -47,6 +50,21 @@ const DesignDepartment = () => {
       if (error) throw error;
       return data;
     },
+  });
+
+  const { data: stages } = useQuery({
+    queryKey: ["production-stages", printJobcard?.product_category],
+    queryFn: async () => {
+      if (!printJobcard?.product_category) return [];
+      const { data, error } = await supabase
+        .from("production_stages_config")
+        .select("*")
+        .eq("product_category", printJobcard.product_category)
+        .order("stage_order", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!printJobcard,
   });
 
   const saveDesignDetailsMutation = useMutation({
@@ -138,10 +156,23 @@ const DesignDepartment = () => {
                 </p>
               </CardHeader>
               <CardContent>
-                <Button onClick={() => handleOpenDesignForm(jobcard)} size="sm">
-                  <Upload className="h-4 w-4 mr-2" />
-                  {jobcard.design_details?.length > 0 ? "Update" : "Add"} Design Details
-                </Button>
+                <div className="flex gap-2">
+                  <Button onClick={() => handleOpenDesignForm(jobcard)} size="sm">
+                    <Upload className="h-4 w-4 mr-2" />
+                    {jobcard.design_details?.length > 0 ? "Update" : "Add"} Design Details
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      setPrintJobcard(jobcard);
+                      setPrintViewOpen(true);
+                    }} 
+                    size="sm" 
+                    variant="outline"
+                  >
+                    <Printer className="h-4 w-4 mr-2" />
+                    Print Job Card
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           ))}
@@ -302,6 +333,15 @@ const DesignDepartment = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {printJobcard && stages && (
+        <JobCardPrintView
+          jobcard={printJobcard}
+          stages={stages}
+          open={printViewOpen}
+          onOpenChange={setPrintViewOpen}
+        />
+      )}
     </div>
   );
 };

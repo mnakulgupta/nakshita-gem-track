@@ -14,6 +14,7 @@ import Inquiries from "./pages/Inquiries";
 import ProductionManager from "./pages/ProductionManager";
 import JobcardManagement from "./pages/JobcardManagement";
 import WorkshopTracking from "./pages/WorkshopTracking";
+import WorkshopFloor from "./pages/WorkshopFloor";
 import DesignDepartment from "./pages/DesignDepartment";
 import Analytics from "./pages/Analytics";
 import NotFound from "./pages/NotFound";
@@ -84,6 +85,16 @@ const App = () => (
                 <ProtectedRoute>
                   <AppLayout>
                     <WorkshopTracking />
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/workshop-floor"
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <WorkshopFloor />
                   </AppLayout>
                 </ProtectedRoute>
               }
